@@ -2,8 +2,8 @@
 This scripts for main function of supervised domain adaptation on image classification
 """
 
-from utils.parse_args import parse_args_sda
-from train_val.training_sda import ClsModel, CCSA, dSNE
+from legacy.utils.parse_args import parse_args_sda
+from legacy.train_val import ClsModel, CCSA, dSNE
 
 
 def main():

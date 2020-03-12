@@ -2,7 +2,7 @@
 2 Convolutional layers according to CCSA code
 """
 from mxnet import gluon
-from train_val.custom_layers import AngularLinear
+from legacy.train_val import AngularLinear
 
 
 class Baseline2Convs(gluon.nn.HybridBlock):

@@ -4,7 +4,7 @@ Generate class index dictionary from predictions
 import numpy as np
 import argparse
 
-from utils.io import save_json
+from legacy.utils.io import save_json
 
 
 def gen_cls_idx_dict():

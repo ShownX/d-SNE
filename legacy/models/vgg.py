@@ -4,7 +4,7 @@ VGG Net
 from mxnet.gluon import HybridBlock, nn
 from mxnet.initializer import Xavier
 
-from train_val.custom_layers import AngularLinear, L2Normalization
+from legacy.train_val import AngularLinear, L2Normalization
 
 
 class VGG(HybridBlock):

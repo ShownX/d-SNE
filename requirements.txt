@@ -3,4 +3,4 @@ tqdm
 scikit-learn
 scikit-image
 scipy
-mxboard
+easydict

@@ -1,0 +1,16 @@
+META:
+  CLASSES: {'0': 0, '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9}
+  SOURCE: 'MT'
+  SOURCE_PATH: 'datasets/MNIST.bin'
+  TARGET: 'MM'
+  TARGET_PATH: 'datasets/MNIST-M.bin'
+  NETWORK: 'LENETPLUS'
+  NETWORK_PARAMS:
+    CLASSES: 10
+    FEATURE_SIZE: 256
+TRAIN:
+  OPTIM: 'sgd'
+  OPTIM_PARAMS:
+    LEARNING_RATE: 0.1
+    WD: 1e-4
+    MOMENTUM: 0.9

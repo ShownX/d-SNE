@@ -15,12 +15,12 @@ from mxnet.gluon.data import DataLoader
 from mxnet.gluon.data.vision import transforms
 from mxnet.gluon.utils import split_and_load
 
-from utils.datasets_su import DomainFolderDataset, DomainRecDataset, DomainArrayDataset
-from utils.datasets_funcs import split_office_train_test, split_digits_train_test
-from utils.logging import Logger
-from utils.plotting import cal_tsne_embeds, cal_tsne_embeds_src_tgt
-from utils.mxnet_utils import MultiEpochScheduler
-from utils.io import load_json
+from legacy.utils import DomainFolderDataset, DomainRecDataset, DomainArrayDataset
+from legacy.utils import split_office_train_test, split_digits_train_test
+from legacy.utils import Logger
+from legacy.utils.plotting import cal_tsne_embeds, cal_tsne_embeds_src_tgt
+from legacy.utils import MultiEpochScheduler
+from legacy.utils.io import load_json
 from .custom_layers import ContrastiveLoss, dSNELoss
 
 

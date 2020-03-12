@@ -7,7 +7,7 @@ import random
 from mxnet import recordio, image, nd
 from mxnet.gluon.data.dataset import Dataset
 
-from utils.io import load_json, save_json
+from legacy.utils.io import load_json, save_json
 from .datasets_funcs import gen_cls_idx_dict
 
 

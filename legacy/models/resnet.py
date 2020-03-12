@@ -3,7 +3,7 @@ ResNet
 """
 from mxnet.gluon.model_zoo.vision import BasicBlockV1, BasicBlockV2, BottleneckV1, BottleneckV2
 from mxnet.gluon import HybridBlock, nn
-from train_val.custom_layers import AngularLinear, L2Normalization
+from legacy.train_val import AngularLinear, L2Normalization
 
 resnet_spec = {18: ('basic_block', [2, 2, 2, 2], [64, 64, 128, 256, 512]),
                34: ('basic_block', [3, 4, 6, 3], [64, 64, 128, 256, 512]),

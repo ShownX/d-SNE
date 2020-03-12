@@ -2,8 +2,8 @@
 This script is used for training on semi-supervised domain adaptation on the image classification
 """
 
-from utils.parse_args import parse_args_ssda
-from train_val.training_ssda import MeanTeacher, MeanTeacherDSNET, MeanTeacherDSNETv2
+from legacy.utils.parse_args import parse_args_ssda
+from legacy.train_val import MeanTeacher, MeanTeacherDSNET, MeanTeacherDSNETv2
 
 
 def main():

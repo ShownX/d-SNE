@@ -12,13 +12,12 @@ from mxnet.metric import Accuracy, Loss
 from mxnet.gluon.loss import SoftmaxCrossEntropyLoss
 from mxnet.gluon.data import DataLoader
 
-from utils.io import load_json
-from utils.datasets_su import DomainArrayDataset, DomainRecDataset
-from utils.datasets_ss import DomainArrayTripletDataset, DomainRecTripletDataset, DomainRecTripletDatasetv2
-from utils.datasets_funcs import split_digits_train_test_semi
-from utils.samplers import TripletBalancedSampler
-from train_val.training_sda import DomainModel
-from train_val.custom_layers import dSNELoss, SoftmaxL2Loss
+from legacy.utils.io import load_json
+from legacy.utils import DomainArrayDataset, DomainRecDataset
+from legacy.utils import DomainArrayTripletDataset, DomainRecTripletDataset
+from legacy.utils import split_digits_train_test_semi
+from legacy.train_val import DomainModel
+from legacy.train_val import dSNELoss, SoftmaxL2Loss
 
 
 class MeanTeacher(DomainModel):

@@ -2,7 +2,7 @@
 LeNetPlus changed from LeNet
 """
 from mxnet import gluon
-from train_val.custom_layers import AngularLinear, L2Normalization
+from legacy.train_val import AngularLinear, L2Normalization
 
 
 def _make_conv_block(block_index, num_chan=32, num_layer=2, stride=1, pad=2):
