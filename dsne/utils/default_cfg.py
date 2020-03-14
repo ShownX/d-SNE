@@ -33,8 +33,8 @@ Cfg.META.CKPT_POSTFIX = None
 Cfg.NETWORK = edict()
 # Network name
 Cfg.NETWORK.NAME = 'LeNetPlus'
-# Network initializer
-Cfg.NETWORK.INIT = 'MSRAPrelu'
+# Network initializer, e.g. 'MSRAPrelu'
+Cfg.NETWORK.INIT = None
 # Network resume weight path
 Cfg.NETWORK.CKPT_PATH = ''
 # Network Parameters

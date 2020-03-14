@@ -93,7 +93,8 @@ class DomainAdaptationModel(object):
         self.net = get_network(self.cfg.NETWORK.NAME, network_params)
 
         if self.cfg.NETWORK.CKPT_PATH is None or len(self.cfg.NETWORK.CKPT_PATH) == 0:
-            self.net.initialize(self.cfg.NETWORK.INIT)
+            init = self.cfg.NETWORK.INIT if self.cfg.NETWORK.INIT is not None else 'uniform'
+            self.net.initialize(init)
         else:
             logging.info('Loading weights from {}'.format(self.cfg.NETWORK.CKPT_PATH))
             self.net.load_parameters(self.cfg.NETWORK.CKPT_PATH)
