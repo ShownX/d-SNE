@@ -1,11 +1,27 @@
 from mxnet import autograd
 from mxnet.metric import Loss, Accuracy
+from mxnet.gluon.data import DataLoader
 
 from .basic_model import DomainAdaptationModel, SoftmaxCrossEntropyLoss
 from ..networks import dSNELoss
+from ..datasets import get_dataset
 
 
 class dSNEModel(DomainAdaptationModel):
+    def create_dataloader(self):
+        train_dataset_params = self.cfg.DATA.TRAIN_DATASET_PARAMS
+        train_dataset_params.update({'SOURCE_PATH': self.cfg.META.SOURCE_PATH, 'TARGET_PATH': self.cfg.META.TARGET_PATH})
+        train_dataset = get_dataset(self.cfg.DATA.TRAIN_DATASET, train_dataset_params, self.cfg.DATA.TRAIN_TRANSFORM)
+
+        self.train_loader = DataLoader(train_dataset, batch_size=self.cfg.DATA.BATCH_SIZE, shuffle=True,
+                                       last_batch='discard', num_workers=8, pin_memory=True)
+
+        test_dataset_params = self.cfg.DATA.TEST_DATASET_PARAMS
+        test_dataset_params.update({'TARGET_PATH': self.cfg.META.TARGET_PATH, 'TARGET_NUM': 0})
+        test_dataset = get_dataset(self.cfg.DATA.TEST_DATASET, test_dataset_params, self.cfg.DATA.TEST_TRANSFORM, is_train=False)
+        self.test_loader = DataLoader(test_dataset, batch_size=self.cfg.DATA.BATCH_SIZE, shuffle=False,
+                                      last_batch='keep', num_workers=8, pin_memory=True)
+
     def create_meter(self):
         self.meter = {'Xent-Src': Loss(name='XEnt-Src'), 'Acc-Src': Accuracy(name='Acc-Src'),
                       'Xent-Tgt': Loss(name='XEnt-Tgt'), 'Acc-Tgt': Accuracy(name='Acc-Tgt'),
@@ -35,6 +51,7 @@ class dSNEModel(DomainAdaptationModel):
 
             if self.cfg.TRAIN.LOG_ITV != 0 and self.cur_iter % self.cfg.TRAIN.LOG_ITV == 0:
                 self.log()
+                self.eval_epoch()
 
         self.log()
 

@@ -1,4 +1,3 @@
-import os
 import random
 import numpy as np
 import pickle as pk
@@ -17,37 +16,60 @@ def _gen_cls_idx_dict(idx_cls_lst):
     return cls_idx_dict
 
 
-class DigitDataset(Dataset):
-    def __init__(self, cfg, is_train=True, transform=None):
-        self.cfg = cfg
+def load_bin(path):
+    with open(path, 'rb') as fin:
+        data = pk.load(fin)
 
+    return data
+
+
+class DigitDataset(Dataset):
+    def __init__(self, cfg, transform=None, is_train=True):
+        self.cfg = cfg
+        self.transform = transform
         self.is_train = is_train
 
-        self.transform = transform
         self.init_dataset()
 
-    @staticmethod
-    def load_bin(path):
-        with open(path, 'rb') as fin:
-            data = pk.load(fin)
+    def init_dataset(self):
+        data = load_bin(self.cfg.TARGET_PATH)
+        self.data = data['TR'] if self.is_train else data['TE']
+        self.length = len(self.data[0])
 
-        return data
+    def __getitem__(self, idx):
+        im, l = self.data[0][idx], self.data[1][idx]
+        im = nd.array(im, dtype='float32')
+        if self.transform is not None:
+            im = self.transform(im)
+
+        return im, l
+
+    def __len__(self):
+        return self.length
+
+
+class DigitPairsDataset(Dataset):
+    def __init__(self, cfg, transform=None, is_train=True):
+        self.cfg = cfg
+
+        self.ratio = 1
+        self.transform = transform
+        self.is_train = is_train
+        self.init_dataset()
 
     def init_dataset(self):
-        if self.is_train:
-            self.data_src, self.idx_src = self.sample_data(self.cfg.SOURCE_PATH, self.cfg.SOURCE_NUM)
-            self.data_tgt, self.idx_tgt = self.sample_data(self.cfg.TARGET_PATH, self.cfg.TARGET_NUM)
-        else:
-            self.data_tgt, self.idx_tgt = self.sample_data(self.cfg.TARGET_PATH, self.cfg.TARGET_NUM)
+        self.data_src = self.sample_data(self.cfg.SOURCE_PATH, self.cfg.SOURCE_NUM)
+        self.data_tgt = self.sample_data(self.cfg.TARGET_PATH, self.cfg.TARGET_NUM)
+        self.data_pairs = self.create_pairs()
 
     def create_pairs(self):
         pos_pairs, neg_pairs = [], []
-        for ids, ys in enumerate(self.arrs[1]):
-            for idt, yt in enumerate(self.arrt[1]):
+        for ids, ys in enumerate(self.data_src[1]):
+            for idt, yt in enumerate(self.data_tgt[1]):
                 if ys == yt:
-                    pos_pairs.append([ids, ys, idt, yt, 1])
+                    pos_pairs.append([ids, idt])
                 else:
-                    neg_pairs.append([ids, ys, idt, yt, 0])
+                    neg_pairs.append([ids, idt])
 
         if self.ratio > 0:
             random.shuffle(neg_pairs)
@@ -60,8 +82,7 @@ class DigitDataset(Dataset):
         return pairs
 
     def sample_data(self, path, k):
-        data = self.load_bin(path)
-        data = data['TR'] if self.is_train else data['TE']
+        data = load_bin(path)['TR']
 
         if k > 0:
             # each class has equivalent samples
@@ -90,10 +111,7 @@ class DigitDataset(Dataset):
 
             data = [x, y]
 
-        # cls_idx = _gen_cls_idx_dict(data[1])
-        idx = list(range(len(data[1])))
-
-        return data, idx
+        return data
 
     def __getitem__(self, idx):
         """
@@ -101,33 +119,23 @@ class DigitDataset(Dataset):
         :param idx: index
         :return:
         """
-        if self.is_train:
-            idx1, idx2 = idx
-            im1, l1 = self.data_src[0][idx1], self.data_src[1][idx1]
-            im2, l2 = self.data_tgt[0][idx2], self.data_tgt[1][idx2]
+        idx1, idx2 = self.data_pairs[idx]
+        im1, l1 = self.data_src[0][idx1], self.data_src[1][idx1]
+        im2, l2 = self.data_tgt[0][idx2], self.data_tgt[1][idx2]
 
-            im1 = nd.array(im1, dtype='float32')
-            im2 = nd.array(im2, dtype='float32')
+        im1 = nd.array(im1, dtype='float32')
+        im2 = nd.array(im2, dtype='float32')
 
-            if self.transform is not None:
-                im1 = self.transform(im1)
+        if self.transform is not None:
+            im1 = self.transform(im1)
 
-            if self.transform is not None:
-                im2 = self.transform(im2)
+        if self.transform is not None:
+            im2 = self.transform(im2)
 
-            lc = 1 if l1 == l2 else 0
+        lc = 1 if l1 == l2 else 0
 
-            return im1, l1, im2, l2, lc
-        else:
-            im, l = self.data_tgt[0][idx], self.data_tgt[1][idx]
-            im = nd.array(im, dtype='float32')
-            if self.transform is not None:
-                im = self.transform(im)
-
-            return im, l
+        return im1, l1, im2, l2, lc
 
     def __len__(self):
-        if self.is_train:
-            return len(self.idx_src)
-        else:
-            return len(self.idx_tgt)
+        return len(self.data_pairs)
+

@@ -1,8 +1,8 @@
 from mxnet.gluon.data.vision.transforms import Compose, Resize, Normalize, ToTensor
-from .digit_dataset import DigitDataset
+from .digit_dataset import DigitDataset, DigitPairsDataset
 
 
-_DATASET = {'DIGIT': DigitDataset}
+_DATASET = {'DIGIT': DigitDataset, 'DIGITPAIR': DigitPairsDataset}
 
 
 def get_transform(transform_params):

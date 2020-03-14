@@ -9,7 +9,7 @@ from dsne import get_model, update_config
 def parse_args():
     parser = argparse.ArgumentParser(description='d-SNE: Domain Adaptation using Stochastic Neighbourhood Embedding')
     parser.add_argument('--cfg', type=str, default='configs/DIGITS/MT-MM.yaml', help='configuration file')
-    parser.add_argument('--model', type=str, default='B', help='train source domain')
+    parser.add_argument('--model', type=str, default='D', help='train source domain')
     parser.add_argument('--no-src', dest='train_src', action='store_false', help='train source domain')
     parser.add_argument('--no-tgt', dest='train_tgt', action='store_false', help='train target domain')
     parser.add_argument('--session', type=str, default='', help='train target domain')

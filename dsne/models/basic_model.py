@@ -10,7 +10,7 @@ from mxnet.gluon.loss import SoftmaxCrossEntropyLoss
 from mxnet.gluon.data import DataLoader
 
 from ..networks import get_network
-from ..datasets import get_dataset, RandomPairSampler
+from ..datasets import get_dataset
 
 
 class DomainAdaptationModel(object):
@@ -44,11 +44,12 @@ class DomainAdaptationModel(object):
 
     def create_dataloader(self):
         train_dataset_params = self.cfg.DATA.TRAIN_DATASET_PARAMS
-        train_dataset_params.update({'SOURCE_PATH': self.cfg.META.SOURCE_PATH, 'TARGET_PATH': self.cfg.META.TARGET_PATH})
+        train_dataset_params.update({'TARGET_PATH': self.cfg.META.SOURCE_PATH, 'TARGET_NUM': self.cfg.META.SOURCE_NUM})
         train_dataset = get_dataset(self.cfg.DATA.TRAIN_DATASET, train_dataset_params, self.cfg.DATA.TRAIN_TRANSFORM)
-        train_sampler = RandomPairSampler(train_dataset.idx_src, train_dataset.idx_tgt)
-        self.train_loader = DataLoader(train_dataset, batch_size=self.cfg.DATA.BATCH_SIZE, sampler=train_sampler,
+
+        self.train_loader = DataLoader(train_dataset, batch_size=self.cfg.DATA.BATCH_SIZE, shuffle=True,
                                        last_batch='discard', num_workers=8, pin_memory=True)
+
         test_dataset_params = self.cfg.DATA.TEST_DATASET_PARAMS
         test_dataset_params.update({'TARGET_PATH': self.cfg.META.TARGET_PATH, 'TARGET_NUM': 0})
         test_dataset = get_dataset(self.cfg.DATA.TEST_DATASET, test_dataset_params, self.cfg.DATA.TEST_TRANSFORM, is_train=False)
@@ -129,33 +130,18 @@ class DomainAdaptationModel(object):
         for data in self.train_loader:
             data = [d.as_in_context(self.ctx[0]) for d in data]
 
-            if self.cfg.TRAIN.TRAIN_SOURCE:
-                with autograd.record():
-                    y_hat, embed = self.net(data[0])
-                    loss = self.criterion_xent(y_hat, data[1])
+            with autograd.record():
+                y_hat, embed = self.net(data[0])
+                loss = self.criterion_xent(y_hat, data[1])
 
-                    self.meter['Xent-Src'].update(None, loss)
-                    self.meter['Acc-Src'].update(preds=[y_hat], labels=[data[1]])
+                self.meter['Xent-Src'].update(None, loss)
+                self.meter['Acc-Src'].update(preds=[y_hat], labels=[data[1]])
 
-                    self.cur_iter += 1
+                self.cur_iter += 1
 
-                    loss.backward()
+                loss.backward()
 
-                self.trainer.step(len(data[0]))
-
-            if self.cfg.TRAIN.TRAIN_TARGET:
-                with autograd.record():
-                    y_hat, embed = self.net(data[2])
-                    loss = self.criterion_xent(y_hat, data[3])
-
-                    self.meter['Xent-Tgt'].update(None, loss)
-                    self.meter['Acc-Tgt'].update(preds=[y_hat], labels=[data[3]])
-
-                    self.cur_iter += 1
-
-                    loss.backward()
-
-                self.trainer.step(len(data[2]))
+            self.trainer.step(len(data[0]))
 
     def eval_epoch(self):
         self.is_train = False
