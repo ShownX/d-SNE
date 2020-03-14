@@ -47,9 +47,7 @@ Cfg.DATA = edict()
 # GPUS
 Cfg.DATA.GPU = 0
 # Data batch size
-Cfg.DATA.BATCH_SIZE = 32
-# Data sample
-Cfg.DATA.SAMPLE_RATIO = 1
+Cfg.DATA.BATCH_SIZE = 256
 # TRAIN Dataset
 Cfg.DATA.TRAIN_DATASET = 'DIGITS'
 Cfg.DATA.TRAIN_DATASET_PARAMS = edict()
@@ -57,6 +55,8 @@ Cfg.DATA.TRAIN_DATASET_PARAMS = edict()
 Cfg.DATA.TRAIN_DATASET_PARAMS.TRAIN_SOURCE_NUM = 0
 # Number of images used in the source domain, 0 use all images, 100 for 10 images / class
 Cfg.DATA.TRAIN_DATASET_PARAMS.TRAIN_TARGET_NUM = 100
+# Data sample
+Cfg.DATA.TRAIN_DATASET_PARAMS.SAMPLE_RATIO = 3
 # Train Transform
 Cfg.DATA.TRAIN_TRANSFORM = edict()
 # Image resize

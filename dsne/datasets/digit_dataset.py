@@ -52,7 +52,6 @@ class DigitPairsDataset(Dataset):
     def __init__(self, cfg, transform=None, is_train=True):
         self.cfg = cfg
 
-        self.ratio = 1
         self.transform = transform
         self.is_train = is_train
         self.init_dataset()
@@ -71,9 +70,9 @@ class DigitPairsDataset(Dataset):
                 else:
                     neg_pairs.append([ids, idt])
 
-        if self.ratio > 0:
+        if self.cfg.SAMPLE_RATIO > 0:
             random.shuffle(neg_pairs)
-            pairs = pos_pairs + neg_pairs[: self.ratio * len(pos_pairs)]
+            pairs = pos_pairs + neg_pairs[: self.cfg.SAMPLE_RATIO * len(pos_pairs)]
         else:
             pairs = pos_pairs + neg_pairs
 
