@@ -74,7 +74,22 @@ class MNISTM(Dataset):
         self.dataset = {'TR': [train_img, train_lbl], 'TE': [test_img, test_lbl]}
 
 
-_DATASET = {'MNIST': MNIST, 'MN': MNIST, 'MNIST-M': MNISTM, 'MM': MNISTM, 'MNISTM': MNISTM}
+class USPS(Dataset):
+    def read(self):
+        import h5py
+        with h5py.File(os.path.join(self.root, 'usps.h5'), 'r') as fin:
+            train, test = fin.get('train'), fin.get('test')
+
+            train_img, train_lbl = train.get('data')[:].reshape((-1, 16, 16)), train.get('target')[:]
+            train_img = np.stack((train_img,) * 3, axis=-1) * 256
+
+            test_img, test_lbl = test.get('data')[:].reshape((-1, 16, 16)), test.get('target')[:]
+            test_img = np.stack((test_img, ) * 3, axis=-1) * 256
+
+            self.dataset = {'TR': [train_img, train_lbl], 'TE': [test_img, test_lbl]}
+
+
+_DATASET = {'MNIST': MNIST, 'MN': MNIST, 'MNIST-M': MNISTM, 'MM': MNISTM, 'MNISTM': MNISTM, 'USPS': USPS, 'US': USPS}
 
 
 def get_packed_dataset(name):

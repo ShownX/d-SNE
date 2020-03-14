@@ -121,7 +121,7 @@ def update_config(args):
         Cfg.META.MODEL = args.model
         Cfg.TRAIN.TRAIN_SOURCE = args.train_src
         Cfg.TRAIN.TRAIN_TARGET = args.train_tgt
-        Cfg.TRAIN.CKPT_POSTFIX = args.session
+        Cfg.META.CKPT_POSTFIX = args.session
         Cfg.NETWORK.CKPT_PATH = args.ckpt
 
         if Cfg.META.CKPT_PREFIX is None or len(Cfg.META.CKPT_PREFIX) == 0:

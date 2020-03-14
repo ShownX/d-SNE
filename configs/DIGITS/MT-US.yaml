@@ -2,34 +2,34 @@ META:
   CLASSES: {'0': 0, '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9}
   SOURCE: 'MT'
   SOURCE_PATH: 'datasets/MNIST.bin'
-  TARGET: 'MM'
-  TARGET_PATH: 'datasets/MNIST-M.bin'
+  TARGET: 'US'
+  TARGET_PATH: 'datasets/USPS.bin'
 DATA:
   TRAIN_DATASET: 'digitpair'
   TRAIN_DATASET_PARAMS:
     SOURCE_NUM: 0
-    TARGET_NUM: 100
+    TARGET_NUM: 70
     SAMPLE_RATIO: 3
   TEST_DATASET: 'digit'
   TEST_DATASET_PARAMS:
     SOURCE_NUM: -1
     TARGET_NUM: 0
-  BATCH_SIZE: 256
+  BATCH_SIZE: 512
 NETWORK:
-  NAME: 'LENETPLUS'
+  NAME: 'CONV2'
   NETWORK_PARAMS:
     CLASSES: 10
     FEATURE_SIZE: 256
     DROPOUT: 0.5
 TRAIN:
-  RNG_SEED: 1
+  RNG_SEED: 2
   OPTIM: 'sgd'
   OPTIM_PARAMS:
-    LEARNING_RATE: 0.001
+    LEARNING_RATE: 0.01
     WD: 0.0001
     MOMENTUM: 0.9
   DSNE:
     MARGIN: 1
-    FN: False
-  MAX_EPOCH: 2
-  LOG_ITV: 100
+    FN: True
+  MAX_EPOCH: 5
+  LOG_ITV: 500

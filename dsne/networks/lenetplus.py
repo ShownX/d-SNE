@@ -16,7 +16,7 @@ class LeNetPlus(gluon.nn.HybridBlock):
     """
     LeNetPlus model
     """
-    def __init__(self, classes=10, feature_size=256, use_bn=False, use_inn=False, use_l2n=False, **kwargs):
+    def __init__(self, classes=10, feature_size=256, use_bn=False, use_inn=False, use_l2n=False, dropout=0.5, **kwargs):
         super(LeNetPlus, self).__init__(**kwargs)
         num_chans = [32, 64, 128]
         with self.name_scope():
@@ -34,6 +34,9 @@ class LeNetPlus(gluon.nn.HybridBlock):
                     self.features.add(gluon.nn.BatchNorm())
 
                 self.features.add(_make_conv_block(i, num_chan=num_chan))
+
+                if dropout > 0:
+                    self.features.add(gluon.nn.Dropout(dropout))
 
             self.features.add(gluon.nn.Dense(feature_size))
 
