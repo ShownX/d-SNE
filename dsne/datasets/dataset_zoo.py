@@ -21,4 +21,4 @@ def get_transform(transform_params):
 def get_dataset(name, dataset_params, transform_params, is_train=True):
     transform = get_transform(transform_params)
 
-    return _DATASET[name.upper()](dataset_params, is_train, transform)
+    return _DATASET[name.upper()](dataset_params, transform, is_train)
