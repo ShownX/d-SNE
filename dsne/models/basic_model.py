@@ -4,16 +4,20 @@ import logging
 import random
 import numpy as np
 import mxnet as mx
+from mxnet import autograd
 from mxnet.metric import Loss, Accuracy
 from mxnet.gluon.loss import SoftmaxCrossEntropyLoss
+from mxnet.gluon.data import DataLoader
 
 from ..networks import get_network
+from ..datasets import get_dataset, RandomPairSampler
 
 
 class DomainAdaptationModel(object):
     def __init__(self, cfg, **kwargs):
         self.cfg = cfg
         self.cur_epoch, self.cur_iter = 0, 0
+        self.is_train = True
 
     def init_logging(self):
         filehandler = logging.FileHandler(self.cfg.META.CKPT_PATH + '.log')
@@ -33,15 +37,23 @@ class DomainAdaptationModel(object):
             mx.random.seed(self.cfg.TRAIN.RNG_SEED)
 
     def create_context(self):
-        if isinstance(self.cfg.DATA.GPUS, list):
-            self.ctx = [mx.gpu(gpu_id) for gpu_id in self.cfg.DATA.GPUS]
-        elif self.cfg.DATA.GPUS > 0:
-            self.ctx = [mx.gpu(self.cfg.DATA.GPUS)]
+        if self.cfg.DATA.GPU >= 0:
+            self.ctx = [mx.gpu(self.cfg.DATA.GPU)]
         else:
             self.ctx = [mx.cpu()]
 
     def create_dataloader(self):
-        pass
+        train_dataset_params = self.cfg.DATA.TRAIN_DATASET_PARAMS
+        train_dataset_params.update({'SOURCE_PATH': self.cfg.META.SOURCE_PATH, 'TARGET_PATH': self.cfg.META.TARGET_PATH})
+        train_dataset = get_dataset(self.cfg.DATA.TRAIN_DATASET, train_dataset_params, self.cfg.DATA.TRAIN_TRANSFORM)
+        train_sampler = RandomPairSampler(train_dataset.idx_src, train_dataset.idx_tgt)
+        self.train_loader = DataLoader(train_dataset, batch_size=self.cfg.DATA.BATCH_SIZE, sampler=train_sampler,
+                                       last_batch='discard', num_workers=8, pin_memory=True)
+        test_dataset_params = self.cfg.DATA.TEST_DATASET_PARAMS
+        test_dataset_params.update({'TARGET_PATH': self.cfg.META.TARGET_PATH, 'TARGET_NUM': 0})
+        test_dataset = get_dataset(self.cfg.DATA.TEST_DATASET, test_dataset_params, self.cfg.DATA.TEST_TRANSFORM, is_train=False)
+        self.test_loader = DataLoader(test_dataset, batch_size=self.cfg.DATA.BATCH_SIZE, shuffle=False,
+                                      last_batch='keep', num_workers=8, pin_memory=True)
 
     def create_criterion(self):
         self.criterion_xent = SoftmaxCrossEntropyLoss()
@@ -57,13 +69,14 @@ class DomainAdaptationModel(object):
             self.trainer.load_states(self.cfg.NETWORK.CKPT_PATH.replace('.params', '.states'))
 
     def create_meter(self):
-        self.meters = {'Xent-Src': Loss(), 'Xent-Tgt': Loss(), 'Acc-Src': Accuracy(), 'Acc-Tgt': Accuracy(),
-                       'Aux-Src': Loss(), 'Aux-Tgt': Loss(), 'Total-Src': Loss(), 'Total-Tgt': Loss()}
+        self.meter = {'Xent-Src': Loss(name='XEnt-Src'), 'Acc-Src': Accuracy(name='Acc-Src')}
+        if self.cfg.TRAIN.TRAIN_TARGET:
+            self.meter.update({'Xent-Tgt': Loss(name='XEnt-Tgt'),'Acc-Tgt': Accuracy(name='Acc-Tgt')})
 
         self.eval_tracker = {'Epoch': 0, 'Iter': 0, 'Acc': 0}
 
     def reset_meter(self):
-        for k, v in self.meters.items():
+        for k, v in self.meter.items():
             v.reset()
 
     @staticmethod
@@ -108,14 +121,72 @@ class DomainAdaptationModel(object):
             self.train_epoch()
             self.eval_epoch()
 
+        self.summary()
+
     def train_epoch(self):
-        pass
+        self.is_train = True
+        self.reset_meter()
+        for data in self.train_loader:
+            data = [d.as_in_context(self.ctx[0]) for d in data]
+
+            if self.cfg.TRAIN.TRAIN_SOURCE:
+                with autograd.record():
+                    y_hat, embed = self.net(data[0])
+                    loss = self.criterion_xent(y_hat, data[1])
+
+                    self.meter['Xent-Src'].update(None, loss)
+                    self.meter['Acc-Src'].update(preds=[y_hat], labels=[data[1]])
+
+                    self.cur_iter += 1
+
+                    loss.backward()
+
+                self.trainer.step(len(data[0]))
+
+            if self.cfg.TRAIN.TRAIN_TARGET:
+                with autograd.record():
+                    y_hat, embed = self.net(data[2])
+                    loss = self.criterion_xent(y_hat, data[3])
+
+                    self.meter['Xent-Tgt'].update(None, loss)
+                    self.meter['Acc-Tgt'].update(preds=[y_hat], labels=[data[3]])
+
+                    self.cur_iter += 1
+
+                    loss.backward()
+
+                self.trainer.step(len(data[2]))
 
     def eval_epoch(self):
-        pass
+        self.is_train = False
+        meter = Accuracy()
+        meter.reset()
 
-    def save_epoch(self):
-        pass
+        for X, y in self.test_loader:
+            X = X.as_in_context(self.ctx[0])
+            y = y.as_in_context(self.ctx[0])
 
-    def test(self):
-        pass
+            y_hat, features = self.net(X)
+            meter.update([y], [y_hat])
+
+        acc = meter.get()[1]
+        logging.info('Test  - Epoch {}, Iter {}, Acc {:.2f} %'.format(self.cur_epoch, self.cur_iter, acc * 100))
+
+        if acc > self.eval_tracker['Acc']:
+            self.eval_tracker.update({'Epoch': self.cur_epoch, 'Iter': self.cur_iter, 'Acc': acc})
+
+        self.net.save_parameters('{}_{}_{}_{:.2f}.params'.format(self.cfg.META.CKPT_PATH, self.cur_epoch,
+                                                                 self.cur_iter, acc))
+
+    def log(self):
+        msg = 'Train - Epoch {}, Iter {}'.format(self.cur_epoch, self.cur_iter)
+
+        for k, mtc in self.meter.items():
+            k, v = mtc.get()
+            msg += ', {} {:.6f}'.format(k, v)
+
+        logging.info(msg)
+
+    def summary(self):
+        logging.info('Best  - Epoch {}, Iter {}, Acc {:.2f}'.format(
+            self.eval_tracker['Epoch'], self.eval_tracker['Iter'], self.eval_tracker['Acc'] * 100))

@@ -16,14 +16,10 @@ Cfg.META.CLASSES = None
 Cfg.META.SOURCE = ''
 # Source domain data path
 Cfg.META.SOURCE_PATH = ''
-# Number of images used in the source domain, 0 use all images
-Cfg.META.SOURCE_NUM_IMG = 0
 # Target domain abbreviation
 Cfg.META.TARGET = ''
 # Target domain abbreviation
 Cfg.META.TARGET_PATH = ''
-# Number of images used in the target domain
-Cfg.META.TARGET_NUM_IMG = 100
 # Checkpoint directory
 Cfg.META.CKPT_DIR = 'ckpts'
 # Checkpoint prefix
@@ -49,7 +45,36 @@ Cfg.NETWORK.PARAMS = edict()
 # --------------------------------------------------------------- #
 Cfg.DATA = edict()
 # GPUS
-Cfg.DATA.GPUS = [0]
+Cfg.DATA.GPU = 0
+# Data batch size
+Cfg.DATA.BATCH_SIZE = 32
+# Data sample
+Cfg.DATA.SAMPLE_RATIO = 1
+# TRAIN Dataset
+Cfg.DATA.TRAIN_DATASET = 'DIGITS'
+Cfg.DATA.TRAIN_DATASET_PARAMS = edict()
+# Number of images used in the source domain, 0 use all images
+Cfg.DATA.TRAIN_DATASET_PARAMS.TRAIN_SOURCE_NUM = 0
+# Number of images used in the source domain, 0 use all images, 100 for 10 images / class
+Cfg.DATA.TRAIN_DATASET_PARAMS.TRAIN_TARGET_NUM = 100
+# Train Transform
+Cfg.DATA.TRAIN_TRANSFORM = edict()
+# Image resize
+Cfg.DATA.TRAIN_TRANSFORM.RESIZE = 32
+# Image normalize
+Cfg.DATA.TRAIN_TRANSFORM.MEAN = 0.5
+# Image normalize
+Cfg.DATA.TRAIN_TRANSFORM.STD = 0.5
+
+# Test Dataset
+Cfg.DATA.TEST_DATASET = 'DIGITS'
+Cfg.DATA.TEST_TRANSFORM = edict()
+# Image resize
+Cfg.DATA.TEST_TRANSFORM.RESIZE = 32
+# Image normalize
+Cfg.DATA.TEST_TRANSFORM.MEAN = 0.5
+# Image normalize
+Cfg.DATA.TEST_TRANSFORM.STD = 0.5
 # --------------------------------------------------------------- #
 # Train options
 # --------------------------------------------------------------- #
@@ -61,7 +86,7 @@ Cfg.TRAIN.TRAIN_TARGET = True
 # Training random see
 Cfg.TRAIN.RNG_SEED = 0
 # Train maximum epoch
-Cfg.TRAIN.MAX_EPOCH = 20
+Cfg.TRAIN.MAX_EPOCH = 10
 # Trainer
 Cfg.TRAIN.OPTIM = 'SGD'
 # Trainer optimizer
@@ -72,12 +97,22 @@ Cfg.TRAIN.OPTIM_PARAMS.LEARNING_RATE = 0.1
 Cfg.TRAIN.OPTIM_PARAMS.WD = 1e-4
 # Momentum
 Cfg.TRAIN.OPTIM_PARAMS.MOMENTUM = 0.9
+# Log Iterval
+Cfg.TRAIN.LOG_ITV = 50
+# dSNE
+Cfg.TRAIN.DSNE = edict()
+# Margin
+Cfg.TRAIN.DSNE.MARGIN = 1
+# Feature normalization
+Cfg.TRAIN.DSNE.FN = True
+# Alpha
+Cfg.TRAIN.ALPHA = 0.1
 
 
 def update_config(args):
     if os.path.exists(args.cfg):
         with open(args.cfg, 'r') as fin:
-            cfg = yaml.load(fin)
+            cfg = yaml.safe_load(fin)
 
         if cfg is not None:
             for k in cfg.keys():

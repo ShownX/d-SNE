@@ -39,9 +39,12 @@ class MNIST(Dataset):
             return lbl
 
         train_img = read_img(os.path.join(self.root, 'train-images-idx3-ubyte'))
+        train_img = np.stack((train_img, ) * 3, axis=-1)
         train_lbl = read_lbl(os.path.join(self.root, 'train-labels-idx1-ubyte'))
 
         test_img = read_img(os.path.join(self.root, 't10k-images-idx3-ubyte'))
+        test_img = np.stack((test_img,) * 3, axis=-1)
+
         test_lbl = read_lbl(os.path.join(self.root, 't10k-labels-idx1-ubyte'))
 
         self.dataset = {'TR': [train_img, train_lbl], 'TE': [test_img, test_lbl]}
